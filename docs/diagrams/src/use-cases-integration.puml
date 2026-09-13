@@ -1,0 +1,41 @@
+@startuml
+!include theme.puml
+left to right direction
+title UML Use Case — Интеграция LeaveOps с Bitrix24
+
+actor "Руководитель" as Manager
+actor "Администратор\nинтеграции" as Admin
+actor "Bitrix24 Calendar" as B24 <<external system>>
+
+rectangle "LeaveOps" {
+  usecase "UC-06\nСинхронизировать календарь" as Sync
+  usecase "Доставить outbox-событие" as Deliver
+  usecase "Настроить карту\nпользователей" as Mapping
+  usecase "Проверить карту и\nличные разделы" as MapCheck
+  usecase "Проверить конфигурацию\nBitrix24" as Probe
+
+  Mapping -[hidden]down- Probe
+  Sync -[hidden]down- Deliver
+}
+
+Manager -right-> Sync
+Admin -right-> Sync
+Admin -right-> Mapping
+Admin -right-> Probe
+B24 -left-> Deliver
+B24 -left-> MapCheck
+B24 -left-> Probe
+
+Sync .down.> Deliver : <<include>>
+Mapping .right.> MapCheck : <<include>>
+
+note bottom of Sync
+  Текущий PoC: ручной запуск —
+  руководитель в UI или администратор через CLI.
+end note
+
+note bottom of Deliver
+  IntegrationWorker — внутренний компонент,
+  а не актор Use Case.
+end note
+@enduml

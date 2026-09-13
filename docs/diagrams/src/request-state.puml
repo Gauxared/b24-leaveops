@@ -1,0 +1,20 @@
+@startuml
+!include theme.puml
+title UML State Machine — Заявка на отсутствие
+left to right direction
+
+[*] --> draft : создать
+draft --> submitted : отправить [автор]
+draft --> cancelled : отменить [автор]
+submitted --> approved : согласовать [правила выполнены]
+submitted --> rejected : отклонить [причина задана]
+submitted --> cancelled : отменить [автор]
+approved --> cancelled : отменить / outbox cancel
+rejected --> [*]
+cancelled --> [*]
+
+note right of approved
+  Согласованный перенос меняет даты,
+  но сохраняет статус approved.
+end note
+@enduml

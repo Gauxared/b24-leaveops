@@ -1,0 +1,60 @@
+@startuml
+!include theme.puml
+title UML Logical Data Model — LeaveOps
+hide methods
+skinparam classAttributeIconSize 0
+
+class Department <<entity>> {
+  id
+  manager
+}
+class Employee <<entity>> {
+  id
+  name
+  role
+  active
+}
+class CoverageRule <<entity>> {
+  role
+  minimumAvailable
+}
+class LeaveBalance <<entity>> {
+  openingDays
+  accrualStart
+  monthlyAccrualDays
+}
+class AbsenceRequest <<aggregate root>> {
+  id
+  startDate
+  endDate
+  status
+}
+class RequestHistory <<entity>> {
+  fromStatus
+  toStatus
+  reason
+  createdAt
+}
+class RescheduleProposal <<entity>> {
+  startDate
+  endDate
+  status
+  decisionReason
+}
+class IntegrationEvent <<outbox>> {
+  operation
+  payload
+  deliveryStatus
+  attempts
+  externalId
+}
+
+Department "1" o-- "0..*" Employee : включает
+Department "1" *-- "0..*" CoverageRule : задаёт
+Employee "1" *-- "0..1" LeaveBalance : имеет
+Employee "1" --> "0..*" AbsenceRequest : создаёт
+AbsenceRequest "1" *-- "1..*" RequestHistory : история
+AbsenceRequest "1" *-- "0..*" RescheduleProposal : переносы
+AbsenceRequest "1" *-- "0..*" IntegrationEvent : команды доставки
+Employee "1" <-- "0..*" RequestHistory : актор
+@enduml

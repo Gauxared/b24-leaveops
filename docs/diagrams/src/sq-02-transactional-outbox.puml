@@ -1,0 +1,47 @@
+@startuml
+!include theme.puml
+title SQ-02 — Business transaction + Transactional Outbox
+
+actor "Руководитель" as Manager
+boundary "HTTP API" as API
+control "LeaveOps Service" as Service
+database "Application SQLite" as DB
+control "IntegrationWorker" as Worker
+participant "Bitrix24 Adapter" as Adapter
+participant "Bitrix24 Calendar" as B24
+
+Manager -> API : approve(request_id)
+API -> Service : transition(..., approved)
+group одна локальная транзакция
+  Service -> DB : BEGIN IMMEDIATE
+  Service -> DB : revalidate rules
+  Service -> DB : UPDATE request
+  Service -> DB : INSERT history
+  Service -> DB : INSERT outbox(upsert, pending)
+  Service -> DB : COMMIT
+end
+Service --> API : business result
+API --> Manager : 200 approved\ndelivery=pending
+
+... позже: отдельный запуск worker ...
+Manager -> API : POST /api/sync
+API -> Worker : drain()
+Worker -> DB : claim event + token + lease
+Worker -> Adapter : deliver(event)
+Adapter -> Adapter : resolve employee mapping
+alt mapping отсутствует или невалиден
+  Adapter --> Worker : diagnostic mapping error
+  Worker -> DB : pending + last_error\nclear token and lease
+else mapping валиден
+  Adapter -> B24 : calendar.event.get / add
+  alt доставка успешна
+    B24 --> Adapter : event ID
+    Adapter --> Worker : external_id
+    Worker -> DB : delivered + external_id + delivered_at
+  else ошибка API / transport
+    B24 --> Adapter : error / timeout
+    Adapter --> Worker : exception
+    Worker -> DB : pending + last_error\nclear token and lease
+  end
+end
+@enduml

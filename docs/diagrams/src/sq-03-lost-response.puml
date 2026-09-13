@@ -1,0 +1,26 @@
+@startuml
+!include theme.puml
+title SQ-03 — Потерянный ответ и идемпотентный повтор
+
+control "IntegrationWorker" as Worker
+participant "Bitrix24 Adapter" as Adapter
+participant "Bitrix24 Calendar" as B24
+database "Application SQLite" as DB
+
+Worker -> Adapter : deliver(upsert)
+Adapter -> B24 : calendar.event.get(marker)
+B24 --> Adapter : не найдено
+Adapter -> B24 : calendar.event.add\n[LeaveOps:request_id]
+B24 -> B24 : событие создано
+B24 -x Adapter : ответ потерян
+Adapter -x Worker : timeout / transport error
+Worker -> DB : pending, attempts=1, last_error
+
+... следующая попытка ...
+Worker -> DB : claim, attempts=2
+Worker -> Adapter : deliver(upsert)
+Adapter -> B24 : calendar.event.get(marker)
+B24 --> Adapter : существующий event ID
+Adapter --> Worker : тот же external_id\nбез второго add
+Worker -> DB : delivered + external_id
+@enduml

@@ -1,0 +1,16 @@
+@startuml
+!include theme.puml
+title UML State Machine — Предложение переноса
+left to right direction
+
+[*] --> submitted : предложить [заявка approved]
+submitted --> approved : согласовать [правила выполнены]
+submitted --> rejected : отклонить [причина задана]
+approved --> [*]
+rejected --> [*]
+
+note right of submitted
+  Исходная заявка остаётся approved
+  со старыми датами.
+end note
+@enduml

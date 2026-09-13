@@ -1,0 +1,39 @@
+@startuml
+!include theme.puml
+left to right direction
+title UML Use Case — Бизнес-сценарии LeaveOps
+
+actor "Сотрудник" as Employee
+actor "Руководитель" as Manager
+
+rectangle "LeaveOps" {
+  usecase "UC-01\nСоздать и отправить\nзаявку" as UC01
+  usecase "UC-04\nОтменить заявку" as UC04
+  usecase "UC-03\nПеренести согласованный\nпериод" as UC03
+  usecase "UC-05\nКонтролировать доступность\nкоманды" as UC05
+  usecase "UC-02\nРассмотреть заявку" as UC02
+  usecase "Проверить правила\nпересечение · баланс · покрытие" as Checks
+
+  UC01 -[hidden]down- UC04
+  UC04 -[hidden]down- UC03
+  UC01 -[hidden]right- UC02
+  UC02 -[hidden]down- Checks
+  Checks -[hidden]down- UC05
+}
+
+Employee -right-> UC01
+Employee -right-> UC04
+Employee -right-> UC03
+Employee -right-> UC05
+Manager -left-> UC02
+Manager -left-> UC03
+Manager -left-> UC05
+
+UC02 .down.> Checks : <<include>>
+UC03 .right.> Checks : <<include>>
+
+note bottom of Checks
+  Include означает обязательную часть approval,
+  а не порядок выполнения шагов.
+end note
+@enduml

@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Context>
+title C4 Level 1 — System Context
+LAYOUT_LEFT_RIGHT()
+
+Person(employee, "Сотрудник", "Создаёт, отправляет, отменяет заявку и предлагает перенос")
+Person(manager, "Руководитель", "Оценивает последствия и принимает решение")
+Person(hr, "HR", "Использует сводную и уточняет правила баланса")
+Person(admin, "Администратор интеграции", "Поддерживает карту и контролирует доставку")
+System(leaveops, "LeaveOps", "Управляет заявками, правилами, историей и outbox")
+System_Ext(bitrix, "Bitrix24 Calendar", "Хранит календарное представление согласованных отсутствий")
+
+Rel(employee, leaveops, "Работает с заявками", "Local UI / CLI")
+Rel(manager, leaveops, "Принимает решения, запускает sync", "Local UI / CLI")
+Rel(hr, leaveops, "Просматривает сводную", "В демо через роль руководителя")
+Rel(admin, leaveops, "Настраивает mapping и adapter", "CLI / runtime config")
+Rel(leaveops, bitrix, "Создаёт, обновляет, удаляет события", "Calendar REST API / HTTPS")
+@enduml

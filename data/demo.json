@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "synthetic": true,
+  "calendar": {"working_iso_weekdays": [1, 2, 3, 4, 5], "holidays": [], "inclusive_dates": true},
+  "departments": [{"id": "demo-team", "name": "Демонстрационный отдел", "manager_id": "manager"}],
+  "employees": [
+    {"id": "analyst-a", "name": "Аналитик А", "department_id": "demo-team", "role": "analyst", "active": true},
+    {"id": "analyst-b", "name": "Аналитик Б", "department_id": "demo-team", "role": "analyst", "active": true},
+    {"id": "developer-a", "name": "Разработчик А", "department_id": "demo-team", "role": "developer", "active": true},
+    {"id": "developer-b", "name": "Разработчик Б", "department_id": "demo-team", "role": "developer", "active": true},
+    {"id": "developer-c", "name": "Разработчик В", "department_id": "demo-team", "role": "developer", "active": true},
+    {"id": "manager", "name": "Руководитель", "department_id": "demo-team", "role": "manager", "active": true}
+  ],
+  "coverage_rules": [
+    {"department_id": "demo-team", "role": "analyst", "minimum_available": 1},
+    {"department_id": "demo-team", "role": "developer", "minimum_available": 2}
+  ],
+  "balances": [
+    {"employee_id": "analyst-a", "opening_days": 5, "accrual_start": "2026-01-01", "monthly_accrual_days": 2.33},
+    {"employee_id": "analyst-b", "opening_days": 3, "accrual_start": "2026-01-01", "monthly_accrual_days": 2.33},
+    {"employee_id": "developer-a", "opening_days": 4, "accrual_start": "2026-01-01", "monthly_accrual_days": 2.33},
+    {"employee_id": "developer-b", "opening_days": 5, "accrual_start": "2026-01-01", "monthly_accrual_days": 2.33},
+    {"employee_id": "developer-c", "opening_days": 0, "accrual_start": "2026-10-01", "monthly_accrual_days": 1},
+    {"employee_id": "manager", "opening_days": 8, "accrual_start": "2026-01-01", "monthly_accrual_days": 2.33}
+  ],
+  "absences": [
+    {"id": "absence-1", "employee_id": "analyst-a", "start_date": "2026-10-12", "end_date": "2026-10-14", "status": "approved", "approved_by": "manager"},
+    {"id": "absence-2", "employee_id": "developer-a", "start_date": "2026-10-12", "end_date": "2026-10-13", "status": "approved", "approved_by": "manager"}
+  ]
+}

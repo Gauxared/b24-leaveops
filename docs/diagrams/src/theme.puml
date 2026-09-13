@@ -1,0 +1,11 @@
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor #334155
+skinparam BorderColor #475569
+skinparam FontColor #0f172a
+skinparam packageStyle rectangle
+skinparam roundcorner 10
+skinparam linetype ortho
+skinparam sequenceMessageAlign center

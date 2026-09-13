@@ -1,0 +1,25 @@
+@startuml
+!include <C4/C4_Container>
+title C4 Level 2 — Containers
+LAYOUT_LEFT_RIGHT()
+
+Person(user, "Пользователь демо", "Сотрудник или руководитель")
+Person(admin, "Администратор интеграции", "Настраивает Bitrix24")
+
+System_Boundary(boundary, "LeaveOps") {
+  Container(browser, "Browser UI", "HTML / CSS / JavaScript", "Локальный интерфейс в браузере")
+  Container(app, "LeaveOps local application", "Python 3.12 standard library", "HTTP API, CLI, application service, worker и adapters в одном codebase")
+  ContainerDb(db, "Application database", "SQLite", "Заявки, история, переносы, правила и outbox")
+}
+
+System_Ext(mock, "Mock Bitrix24", "Локальный внешний substitute для demo/test; отдельная SQLite-база")
+System_Ext(bitrix, "Bitrix24 Calendar", "Облачный Calendar REST API")
+
+Rel(user, browser, "Использует")
+Rel(browser, app, "JSON requests", "HTTP loopback")
+Rel(user, app, "CLI commands", "Process invocation")
+Rel(admin, app, "Mapping check / setup / sync", "CLI + env")
+Rel(app, db, "Читает и изменяет", "sqlite3")
+Rel(app, mock, "Доставляет в demo/test mode", "adapter / sqlite3")
+Rel(app, bitrix, "Calendar operations", "HTTPS JSON")
+@enduml

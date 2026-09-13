@@ -1,0 +1,28 @@
+@startuml
+!include theme.puml
+title SQ-01 — Согласование заявки
+
+actor "Руководитель" as Manager
+boundary "Browser / HTTP API" as API
+control "LeaveOps Service" as Service
+database "SQLite" as DB
+
+Manager -> API : POST /api/transition\n{id, target: approved}
+API -> Service : transition(actor, id, approved)
+Service -> DB : BEGIN IMMEDIATE
+Service -> DB : SELECT actor, request, department
+Service -> DB : SELECT approved absences, rules, balance
+Service -> Service : overlap + balance + coverage
+alt есть конфликт
+  Service -> DB : ROLLBACK
+  Service --> API : WorkflowError(conflict, details)
+  API --> Manager : 409, статус не изменён
+else проверки пройдены
+  Service -> DB : UPDATE requests status=approved
+  Service -> DB : INSERT history
+  Service -> DB : INSERT integration_events(upsert, pending)
+  Service -> DB : COMMIT
+  Service --> API : approved + delivery pending
+  API --> Manager : 200 OK
+end
+@enduml

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_ASIS" targetNamespace="https://example.local/leaveops">
+  <bpmn:message id="Message_CalendarData" name="Сведения о согласованном отсутствии" />
+  <bpmn:collaboration id="Collaboration_ASIS">
+    <bpmn:participant id="Participant_Organization" name="Организация" processRef="Process_ASIS" />
+    <bpmn:participant id="Participant_Bitrix24" name="Bitrix24 Calendar" processRef="Process_B24_ASIS" />
+    <bpmn:messageFlow id="MessageFlow_CalendarData" name="Передать даты" sourceRef="Task_SendCalendar" targetRef="Start_B24_Message" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_ASIS" name="Обобщённый AS-IS" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_ASIS">
+      <bpmn:lane id="Lane_Employee" name="Сотрудник">
+        <bpmn:flowNodeRef>Start_NeedLeave</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CommunicateDates</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Manager" name="Руководитель">
+        <bpmn:flowNodeRef>Task_CheckAvailability</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Decision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotifyReject</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_NotifyApprove</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Rejected</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_HR" name="HR">
+        <bpmn:flowNodeRef>Task_CheckBalance</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_UpdateRegister</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendCalendar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_Recorded</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_NeedLeave" name="Нужно отсутствие"><bpmn:outgoing>Flow_A1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:userTask id="Task_CommunicateDates" name="Сообщить даты"><bpmn:incoming>Flow_A1</bpmn:incoming><bpmn:outgoing>Flow_A2</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="Task_CheckAvailability" name="Вручную проверить календарь команды"><bpmn:incoming>Flow_A2</bpmn:incoming><bpmn:outgoing>Flow_A3</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="Task_CheckBalance" name="Отдельно сверить остаток"><bpmn:incoming>Flow_A3</bpmn:incoming><bpmn:outgoing>Flow_A4</bpmn:outgoing></bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_Decision" name="Согласовать?"><bpmn:incoming>Flow_A4</bpmn:incoming><bpmn:outgoing>Flow_A5_No</bpmn:outgoing><bpmn:outgoing>Flow_A5_Yes</bpmn:outgoing></bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_NotifyReject" name="Сообщить об отказе"><bpmn:incoming>Flow_A5_No</bpmn:incoming><bpmn:outgoing>Flow_A6_No</bpmn:outgoing></bpmn:userTask>
+    <bpmn:endEvent id="End_Rejected" name="Отказ"><bpmn:incoming>Flow_A6_No</bpmn:incoming></bpmn:endEvent>
+    <bpmn:userTask id="Task_NotifyApprove" name="Сообщить о согласовании"><bpmn:incoming>Flow_A5_Yes</bpmn:incoming><bpmn:outgoing>Flow_A6_Yes</bpmn:outgoing></bpmn:userTask>
+    <bpmn:userTask id="Task_UpdateRegister" name="Обновить отпускной регистр"><bpmn:incoming>Flow_A6_Yes</bpmn:incoming><bpmn:outgoing>Flow_A7</bpmn:outgoing></bpmn:userTask>
+    <bpmn:sendTask id="Task_SendCalendar" name="Передать данные для календаря"><bpmn:incoming>Flow_A7</bpmn:incoming><bpmn:outgoing>Flow_A8</bpmn:outgoing></bpmn:sendTask>
+    <bpmn:endEvent id="End_Recorded" name="Учёт обновлён"><bpmn:incoming>Flow_A8</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_A1" sourceRef="Start_NeedLeave" targetRef="Task_CommunicateDates" />
+    <bpmn:sequenceFlow id="Flow_A2" sourceRef="Task_CommunicateDates" targetRef="Task_CheckAvailability" />
+    <bpmn:sequenceFlow id="Flow_A3" sourceRef="Task_CheckAvailability" targetRef="Task_CheckBalance" />
+    <bpmn:sequenceFlow id="Flow_A4" sourceRef="Task_CheckBalance" targetRef="Gateway_Decision" />
+    <bpmn:sequenceFlow id="Flow_A5_No" name="Нет" sourceRef="Gateway_Decision" targetRef="Task_NotifyReject" />
+    <bpmn:sequenceFlow id="Flow_A6_No" sourceRef="Task_NotifyReject" targetRef="End_Rejected" />
+    <bpmn:sequenceFlow id="Flow_A5_Yes" name="Да" sourceRef="Gateway_Decision" targetRef="Task_NotifyApprove" />
+    <bpmn:sequenceFlow id="Flow_A6_Yes" sourceRef="Task_NotifyApprove" targetRef="Task_UpdateRegister" />
+    <bpmn:sequenceFlow id="Flow_A7" sourceRef="Task_UpdateRegister" targetRef="Task_SendCalendar" />
+    <bpmn:sequenceFlow id="Flow_A8" sourceRef="Task_SendCalendar" targetRef="End_Recorded" />
+  </bpmn:process>
+  <bpmn:process id="Process_B24_ASIS" name="Отдельное ведение календаря" isExecutable="false">
+    <bpmn:startEvent id="Start_B24_Message" name="Получены даты"><bpmn:messageEventDefinition id="MessageEventDefinition_ASIS" messageRef="Message_CalendarData" /><bpmn:outgoing>Flow_B1</bpmn:outgoing></bpmn:startEvent>
+    <bpmn:manualTask id="Task_MaintainCalendar" name="Внести событие вручную"><bpmn:incoming>Flow_B1</bpmn:incoming><bpmn:outgoing>Flow_B2</bpmn:outgoing></bpmn:manualTask>
+    <bpmn:endEvent id="End_B24_Recorded" name="Событие внесено"><bpmn:incoming>Flow_B2</bpmn:incoming></bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_B1" sourceRef="Start_B24_Message" targetRef="Task_MaintainCalendar" />
+    <bpmn:sequenceFlow id="Flow_B2" sourceRef="Task_MaintainCalendar" targetRef="End_B24_Recorded" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_ASIS">
+    <bpmndi:BPMNPlane id="BPMNPlane_ASIS" bpmnElement="Collaboration_ASIS">
+      <bpmndi:BPMNShape id="Participant_Organization_di" bpmnElement="Participant_Organization" isHorizontal="true"><dc:Bounds x="80" y="80" width="1840" height="480" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Employee_di" bpmnElement="Lane_Employee" isHorizontal="true"><dc:Bounds x="110" y="80" width="1810" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Manager_di" bpmnElement="Lane_Manager" isHorizontal="true"><dc:Bounds x="110" y="230" width="1810" height="165" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_HR_di" bpmnElement="Lane_HR" isHorizontal="true"><dc:Bounds x="110" y="395" width="1810" height="165" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_NeedLeave_di" bpmnElement="Start_NeedLeave"><dc:Bounds x="145" y="137" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CommunicateDates_di" bpmnElement="Task_CommunicateDates"><dc:Bounds x="220" y="115" width="130" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckAvailability_di" bpmnElement="Task_CheckAvailability"><dc:Bounds x="430" y="270" width="165" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckBalance_di" bpmnElement="Task_CheckBalance"><dc:Bounds x="675" y="435" width="150" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Decision_di" bpmnElement="Gateway_Decision" isMarkerVisible="true"><dc:Bounds x="920" y="285" width="50" height="50" /><bpmndi:BPMNLabel><dc:Bounds x="900" y="342" width="90" height="22" /></bpmndi:BPMNLabel></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyReject_di" bpmnElement="Task_NotifyReject"><dc:Bounds x="1050" y="245" width="145" height="70" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Rejected_di" bpmnElement="End_Rejected"><dc:Bounds x="1270" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyApprove_di" bpmnElement="Task_NotifyApprove"><dc:Bounds x="1050" y="325" width="145" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UpdateRegister_di" bpmnElement="Task_UpdateRegister"><dc:Bounds x="1280" y="435" width="155" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendCalendar_di" bpmnElement="Task_SendCalendar"><dc:Bounds x="1520" y="435" width="155" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_Recorded_di" bpmnElement="End_Recorded"><dc:Bounds x="1790" y="457" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Bitrix24_di" bpmnElement="Participant_Bitrix24" isHorizontal="true"><dc:Bounds x="80" y="610" width="1840" height="180" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_B24_Message_di" bpmnElement="Start_B24_Message"><dc:Bounds x="1545" y="682" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_MaintainCalendar_di" bpmnElement="Task_MaintainCalendar"><dc:Bounds x="1640" y="660" width="150" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_B24_Recorded_di" bpmnElement="End_B24_Recorded"><dc:Bounds x="1840" y="682" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A1_di" bpmnElement="Flow_A1"><di:waypoint x="181" y="155" /><di:waypoint x="220" y="155" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A2_di" bpmnElement="Flow_A2"><di:waypoint x="350" y="155" /><di:waypoint x="390" y="155" /><di:waypoint x="390" y="310" /><di:waypoint x="430" y="310" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A3_di" bpmnElement="Flow_A3"><di:waypoint x="595" y="310" /><di:waypoint x="635" y="310" /><di:waypoint x="635" y="475" /><di:waypoint x="675" y="475" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A4_di" bpmnElement="Flow_A4"><di:waypoint x="825" y="475" /><di:waypoint x="870" y="475" /><di:waypoint x="870" y="310" /><di:waypoint x="920" y="310" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A5_No_di" bpmnElement="Flow_A5_No"><di:waypoint x="970" y="310" /><di:waypoint x="1010" y="310" /><di:waypoint x="1010" y="280" /><di:waypoint x="1050" y="280" /><bpmndi:BPMNLabel><dc:Bounds x="982" y="286" width="22" height="18" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A6_No_di" bpmnElement="Flow_A6_No"><di:waypoint x="1195" y="280" /><di:waypoint x="1270" y="280" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A5_Yes_di" bpmnElement="Flow_A5_Yes"><di:waypoint x="945" y="335" /><di:waypoint x="945" y="355" /><di:waypoint x="1050" y="355" /><bpmndi:BPMNLabel><dc:Bounds x="966" y="358" width="20" height="18" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A6_Yes_di" bpmnElement="Flow_A6_Yes"><di:waypoint x="1195" y="355" /><di:waypoint x="1240" y="355" /><di:waypoint x="1240" y="475" /><di:waypoint x="1280" y="475" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A7_di" bpmnElement="Flow_A7"><di:waypoint x="1435" y="475" /><di:waypoint x="1520" y="475" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A8_di" bpmnElement="Flow_A8"><di:waypoint x="1675" y="475" /><di:waypoint x="1790" y="475" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_B1_di" bpmnElement="Flow_B1"><di:waypoint x="1581" y="700" /><di:waypoint x="1640" y="700" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_B2_di" bpmnElement="Flow_B2"><di:waypoint x="1790" y="700" /><di:waypoint x="1840" y="700" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_CalendarData_di" bpmnElement="MessageFlow_CalendarData"><di:waypoint x="1598" y="515" /><di:waypoint x="1598" y="620" /><di:waypoint x="1563" y="620" /><di:waypoint x="1563" y="682" /><bpmndi:BPMNLabel><dc:Bounds x="1604" y="570" width="85" height="18" /></bpmndi:BPMNLabel></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

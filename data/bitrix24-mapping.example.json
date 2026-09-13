@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "employees": {
+    "manager": {"owner_id": 100, "section_id": 501},
+    "analyst-b": {"owner_id": 101, "section_id": 502}
+  }
+}

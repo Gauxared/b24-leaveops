@@ -1,0 +1,30 @@
+@startuml
+!include theme.puml
+title UML Component Diagram — LeaveOps codebase
+
+actor "Browser user" as User
+component "HTTP transport\nleaveops.web" as HTTP
+component "CLI\nleaveops.__main__" as CLI
+component "Application Service\nLeaveOps" as Service
+component "IntegrationWorker" as Worker
+component "MappedBitrix24\nCalendarAdapter" as Mapper
+component "Bitrix24CalendarAdapter" as Adapter
+component "MockBitrix24" as Mock
+database "Application SQLite" as DB
+database "Mock SQLite" as MockDB
+cloud "Bitrix24 Calendar API" as B24
+
+User --> HTTP
+User --> CLI
+HTTP --> Service
+CLI --> Service
+HTTP --> Worker : /api/sync
+CLI --> Worker : sync / b24-sync
+Service --> DB
+Worker --> DB : claim / result
+Worker --> Mapper
+Worker --> Mock
+Mapper --> Adapter
+Adapter --> B24 : HTTPS JSON
+Mock --> MockDB
+@enduml

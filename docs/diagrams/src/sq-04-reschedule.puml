@@ -1,0 +1,42 @@
+@startuml
+!include theme.puml
+title SQ-04 — Перенос согласованного периода
+
+actor "Сотрудник" as Employee
+boundary "Browser / API" as API
+control "LeaveOps Service" as Service
+database "SQLite" as DB
+actor "Руководитель" as Manager
+control "IntegrationWorker" as Worker
+participant "Bitrix24" as B24
+
+Employee -> API : propose(new_start, new_end)
+API -> Service : propose_reschedule(...)
+Service -> DB : INSERT proposal(submitted)
+Service -> DB : INSERT history(reschedule_submitted)
+Service --> Employee : approved-заявка\nсо старыми датами + proposal
+
+Manager -> API : approve reschedule
+API -> Service : decide_reschedule(..., approved)
+Service -> DB : BEGIN IMMEDIATE
+Service -> DB : revalidate overlap, balance, coverage
+alt конфликт
+  Service -> DB : ROLLBACK
+  Service --> Manager : 409; старые даты сохранены
+else проверки пройдены
+  Service -> DB : UPDATE request dates
+  Service -> DB : UPDATE proposal=approved
+  Service -> DB : INSERT history
+  alt исходный upsert pending
+    Service -> DB : UPDATE payload существующего upsert
+  else событие уже delivered
+    Service -> DB : INSERT outbox(update, external_id)
+  end
+  Service -> DB : COMMIT
+  Service --> Manager : новые даты действуют
+end
+
+... отдельная доставка ...
+Worker -> B24 : calendar.event.update(existing ID)
+B24 --> Worker : тот же external_id
+@enduml

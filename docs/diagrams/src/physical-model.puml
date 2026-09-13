@@ -1,0 +1,80 @@
+@startuml
+!include theme.puml
+title Physical Data Model — SQLite
+hide methods
+skinparam classAttributeIconSize 0
+
+class employees <<table>> {
+  + id : TEXT <<PK>>
+  name : TEXT NOT NULL
+  department_id : TEXT NOT NULL
+  role : TEXT NOT NULL
+  active : INTEGER NOT NULL
+}
+class departments <<table>> {
+  + id : TEXT <<PK>>
+  manager_id : TEXT NOT NULL <<FK>>
+}
+class rules <<table>> {
+  + department_id : TEXT <<PK,FK>>
+  + role : TEXT <<PK>>
+  minimum_available : INTEGER NOT NULL
+}
+class balances <<table>> {
+  + employee_id : TEXT <<PK,FK>>
+  opening_days : REAL NOT NULL
+  accrual_start : TEXT NOT NULL
+  monthly_accrual_days : REAL NOT NULL
+}
+class requests <<table>> {
+  + id : TEXT <<PK>>
+  employee_id : TEXT NOT NULL <<FK>>
+  start_date : TEXT NOT NULL
+  end_date : TEXT NOT NULL
+  status : TEXT NOT NULL
+}
+class history <<table>> {
+  + id : INTEGER <<PK>>
+  request_id : TEXT NOT NULL <<FK>>
+  actor_id : TEXT NOT NULL <<FK>>
+  from_status : TEXT
+  to_status : TEXT NOT NULL
+  reason : TEXT NOT NULL
+  created_at : TEXT NOT NULL
+}
+class reschedule_proposals <<table>> {
+  + id : TEXT <<PK>>
+  request_id : TEXT NOT NULL <<FK>>
+  start_date : TEXT NOT NULL
+  end_date : TEXT NOT NULL
+  status : TEXT NOT NULL
+  requested_by : TEXT NOT NULL <<FK>>
+  decided_by : TEXT <<FK>>
+}
+class integration_events <<table>> {
+  + id : TEXT <<PK>>
+  request_id : TEXT NOT NULL <<FK>>
+  operation : TEXT NOT NULL
+  payload : TEXT NOT NULL
+  status : TEXT NOT NULL
+  attempts : INTEGER NOT NULL
+  external_id : TEXT
+  worker_token : TEXT
+  lease_until : TEXT
+}
+
+employees "1" <-- "0..*" departments : manager_id
+departments "1" <-- "0..*" rules : department_id
+employees "1" <-- "0..1" balances : employee_id
+employees "1" <-- "0..*" requests : employee_id
+requests "1" <-- "0..*" history : request_id
+employees "1" <-- "0..*" history : actor_id
+requests "1" <-- "0..*" reschedule_proposals : request_id
+employees "1" <-- "0..*" reschedule_proposals : requested/decided_by
+requests "1" <-- "0..*" integration_events : request_id
+
+note bottom of employees
+  department_id — логическая ссылка;
+  FK отсутствует в фактическом DDL.
+end note
+@enduml
